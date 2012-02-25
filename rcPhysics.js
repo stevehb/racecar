@@ -31,13 +31,19 @@ RC.Physics = function() {
 
     this.rotate = function(obj, rad) {
         // add rotation, clamp value
+        var prevRotation = obj.rotation.clone();
         obj.rotation.y += rad;
         if(obj.rotation.y > (2 * Math.PI)) { 
             obj.rotation.y -= (2 * Math.PI); 
         } else if(obj.rotation.y < 0.0) { 
             obj.rotation.y += (2 * Math.PI); 
         }
-        // adjust momentum vectors according to friction
+
+        // preserve momentum according to friction
+        var magnitude = obj.momentum.length();
+        obj.momentum.multiplyScalar(1.0 - obj.friction);
+        obj.momentum.x += -Math.sin(obj.rotation.y) * (magnitude * obj.friction);
+        obj.momentum.z += -Math.cos(obj.rotation.y) * (magnitude * obj.friction);
     };
 
     this.update = function(elapsed) {

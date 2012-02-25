@@ -16,7 +16,6 @@ RC.Player = function() {
     this.ACCEL_FORCE = 150;
     this.DRAG_FORCE = 50;
     this.TURN_SPEED = Math.PI / 2;
-    this.FRICTION_COEF = 0.70;
     this.accelState = RC.RacerAccelStateEnum.DRIFT;
     this.turnState = RC.RacerTurnStateEnum.NOTURN;
     RC.log("making physical with RC.physics=" + RC.physics);
@@ -24,7 +23,7 @@ RC.Player = function() {
     RC.physics.addObject(this);
     this.rotation.y = Math.PI;
     this.position.set(0.0, 5.0, RC.END_ZONE_LENGTH);
-    this.friction = this.FRICTION_COEF;
+    this.friction = 0.10;
 
     this.update = function(elapsed) {
         var printChange = false;
