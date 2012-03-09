@@ -3,22 +3,48 @@
         <script src="jquery-1.7.1.js"></script>
         <script src="Three.js"></script>
         <script src="Stats.js"></script>
-        <script src="THREEx.WindowResize.js"></script>
+        <script src="tween.js"></script>
         <script src="THREEx.KeyboardState.js"></script>
         <script src="racecar.js"></script>
         <style type="text/css">
         canvas {
-            border: 1px solid #999;
+            border: 1px solid #009;
+        }
+        #game-container {
+            position: relative;
         }
         #canvas-container {
             border: 2px solid red;
             margin: 1px;
             padding: 1px;
             display: inline-block;
+            position: absolute;
+        }
+        #game-timer {
+            color:#00ff00;
+            display: none;
+            font-size: 48;
+            margin: 4px;
+            position: absolute;
+        }
+        #game-container img {
+            position: absolute;
+            display: none;
+        }
+        #stats {
+            position: absolute;
+            right: 0px;
+            top: 0px;
         }
         </style>
     </head>
     <body onload="init()">
-        <span id="canvas-container" style="border: red 2px solid; display: inline-block;"></span>
+        <div id="game-container">
+            <div id="stats"></div>
+            <span id="canvas-container"></span>
+            <span id="game-timer"></span>
+            <img id="img-logo" src="img/logo.png" />
+            <img id="img-start" src="img/start.png" />
+        </div>
     </body>
 </html>

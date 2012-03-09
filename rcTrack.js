@@ -36,6 +36,24 @@ RC.Track = function() {
     		return true;
     	}
     }
-    //this.endZoneMaterial = new THREE
-    //this.endZoneMesh = new THRE
+
+    RC.initRacers = function() {
+        // create RC.NRACERS racers here, and add updating in main loop  
+    };
+
+    RC.initLights = function() {
+        var i, progress, tmpColor, light, zCoord;
+        for(i = 0; i < RC.NLIGHTS; i++) {
+            progress = i / RC.NLIGHTS;
+            zCoord = RC.END_ZONE_LENGTH + (progress * RC.TRACK_LENGTH);
+            tmpColor = new THREE.Color();
+            tmpColor.setRGB(progress, 0.0, 1.0 - progress);
+            light = new THREE.SpotLight(tmpColor.getHex());
+            light.position.set(0, 30, zCoord);
+            RC.scene.add(light);
+        }    
+    };
+
+    RC.initLights();
+    RC.initRacers();
 };

@@ -3,8 +3,9 @@ var RC = RC || {};
 RC.Player = function() {
     RC.RacerAccelStateEnum = {
         ACCEL : { value : 0, name : "accel" },
-        DRIFT : { value : 1, name : "drift" },
-        BRAKE : { value : 2, name : "brake" }
+        REVERSE : { value : 1, name : "reverse" },
+        STOP : { value : 2, name : "stop"},
+        DRIFT : { value : 3, name : "drift" }
     };
     RC.RacerTurnStateEnum = {
         LEFT : { value : 1, name : "left" },
@@ -14,7 +15,8 @@ RC.Player = function() {
 
     this.MAX_SPEED = 200;
     this.ACCEL_FORCE = 150;
-    this.DRAG_FORCE = 50;
+    this.DRAG_MULTIPLIER = 0.98;
+    this.STOP_MULTIPLIER = 0.90;
     this.TURN_SPEED = Math.PI / 2;
     this.accelState = RC.RacerAccelStateEnum.DRIFT;
     this.turnState = RC.RacerTurnStateEnum.NOTURN;
@@ -26,15 +28,13 @@ RC.Player = function() {
     this.friction = 0.10;
 
     this.update = function(elapsed) {
-        var printChange = false;
-
         // get acceleration and turning states from keyboard        
         if(RC.keyboard.pressed("up")) {
             this.accelState = RC.RacerAccelStateEnum.ACCEL;
         } else if(RC.keyboard.pressed("down")) {
-            this.accelState = RC.RacerAccelStateEnum.BRAKE;
+            this.accelState = RC.RacerAccelStateEnum.REVERSE;
         } else if(RC.keyboard.pressed("space")) {
-            RC.player.momentum.set(0, 0, 0);
+            this.accelState = RC.RacerAccelStateEnum.STOP;
         } else {
             this.accelState = RC.RacerAccelStateEnum.DRIFT;
         }
@@ -61,36 +61,24 @@ RC.Player = function() {
         // apply accel/decel/drift
         switch(this.accelState) {
         case RC.RacerAccelStateEnum.ACCEL:
-            RC.physics.applyForce(this, this.ACCEL_FORCE);
+            RC.physics.addForce(this, this.ACCEL_FORCE);
             RC.physics.clampMomentum(this, this.MAX_SPEED);
-            printChange = true;
             break;
-        case RC.RacerAccelStateEnum.BRAKE:
-            RC.physics.applyForce(this, -this.ACCEL_FORCE);
+        case RC.RacerAccelStateEnum.REVERSE:
+            RC.physics.addForce(this, -this.ACCEL_FORCE);
             RC.physics.clampMomentum(this, this.MAX_SPEED / 2);
-            printChange = true;
+            break;
+        case RC.RacerAccelStateEnum.STOP:
+            RC.physics.dampenMomentum(this, this.STOP_MULTIPLIER);
             break;
         case RC.RacerAccelStateEnum.DRIFT:
-            //this.momentum.x -= -Math.sin(this.rotation.y) * this.DRAG_FORCE * elapsed;
-            //this.momentum.z -= -Math.cos(this.rotation.y) * this.DRAG_FORCE * elapsed;
-            //printChange = true;
-            //if(this.momentum.length() < 0.0) {
-            //    printChange = false;
-            //    this.speed = 0.0;
-            //}
+            RC.physics.dampenMomentum(this, this.DRAG_MULTIPLIER);
             break;
         }
 
         // check for end zone flip
         //if(RC.track.inEndZone(this.position)) {
-        //    this.angle += Math.PI;
+        //    this.rotation.y += Math.PI;
         //}
-
-        if(printChange) {
-            x = this.position.x;
-            y = this.position.y;
-            z = this.position.z;
-            RC.log("speed=" + this.momentum.length() + ", pos=(" + x + ", " + y + ", " + z + ")");
-        }
     };
 };

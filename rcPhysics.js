@@ -4,7 +4,6 @@ RC.Physics = function() {
     this.objList = new Array();
 
     this.makePhysical = function(obj) {
-        obj.movable = true;
         obj.momentum = new THREE.Vector3(0, 0, 0);
         obj.position = new THREE.Vector3(0, 0, 0);
         obj.rotation = new THREE.Vector3(0, 0, 0);
@@ -17,10 +16,17 @@ RC.Physics = function() {
         this.objList.push(obj);
     };
 
-    this.applyForce = function(obj, force) {
-        // take force and add it to accumForce
-        obj.accumForce.x += -Math.sin(obj.rotation.y) * force;
-        obj.accumForce.z += -Math.cos(obj.rotation.y) * force;
+    this.addForce = function(obj, forceScalar) {
+        // add forceScalar to accumForce
+        obj.accumForce.x += -Math.sin(obj.rotation.y) * forceScalar;
+        obj.accumForce.z += -Math.cos(obj.rotation.y) * forceScalar;
+    };
+
+    this.dampenMomentum = function(obj, scalar) {
+        obj.momentum.multiplyScalar(scalar);
+        if(obj.momentum.length() < 1.0) {
+            obj.momentum.set(0.0, 0.0, 0.0);
+        }
     };
 
     this.clampMomentum = function(obj, max) {
@@ -31,7 +37,6 @@ RC.Physics = function() {
 
     this.rotate = function(obj, rad) {
         // add rotation, clamp value
-        var prevRotation = obj.rotation.clone();
         obj.rotation.y += rad;
         if(obj.rotation.y > (2 * Math.PI)) { 
             obj.rotation.y -= (2 * Math.PI); 
