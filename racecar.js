@@ -1,9 +1,5 @@
 var RC = RC || {};
 
-RC.skyboxVertShader = 
-    "void main() {" +
-    "}";
-
 function init() {
     RC.FOV = 75;
     RC.WIDTH = 854;
@@ -16,36 +12,38 @@ function init() {
     RC.NLIGHTS = 5;
     RC.NLAPS = 5;
 
+    // init keyboard extension
     RC.keyboard = new THREEx.KeyboardState();
     
+    // stats counter
     RC.stats = new Stats();
     $("#stats")[0].appendChild(RC.stats.getDomElement());
 
-    RC.log("creating scene");
+    // three.js scene, camera, and renderer
     RC.scene = new THREE.Scene();
-    
     RC.log("creating camera: fov=" + RC.FOV + ", aspect=" + (RC.WIDTH/RC.HEIGHT));
     RC.camera = new THREE.PerspectiveCamera(RC.FOV, RC.WIDTH / RC.HEIGHT, 1, 10000);
     RC.camera.position.set(0, 10, 0);
     RC.camera.rotation.y = Math.PI;
     RC.scene.add(RC.camera);
-
-    RC.log("creating WebGLRenderer");
     RC.renderer = new THREE.WebGLRenderer({ antialias: true, maxLights: RC.NLIGHTS });
     RC.renderer.setClearColorHex(0x223344, 1.0);
     RC.renderer.setSize(RC.WIDTH, RC.HEIGHT);
     $("#canvas-container")[0].appendChild(RC.renderer.domElement);
 
+    // get additional codes, no waiting
     $.ajaxSetup({ async : false });
-    $.getScript("rcPhysics.js", function() { RC.log("loaded physics"); });
-    $.getScript("rcTitleState.js", function() { RC.log("loaded title state"); });
-    $.getScript("rcPlayState.js", function() { RC.log("loaded play state"); });
-    $.getScript("rcEndState.js", function() { RC.log("loaded end state"); });
-    $.getScript("rcTrack.js", function() { RC.log("loaded track"); });
-    $.getScript("rcPlayer.js", function() { RC.log("loaded player") });
-    //$.getScript("rcRacer.js");
+    $.getScript("rcPhysics.js");
+    $.getScript("rcTitleState.js");
+    $.getScript("rcPlayCountdownState.js");
+    $.getScript("rcPlayRaceState.js");
+    //$.getScript("rcEndState.js");
+    $.getScript("rcTrack.js");
+    $.getScript("rcPlayer.js");
+    $.getScript("rcRacer.js");
     $.ajaxSetup({ async : true });
 
+    // create the title state, and start the updates
     RC.physics = new RC.Physics();
     RC.stateStack = new Array();
     RC.stateStack.push(new RC.TitleState());
@@ -53,7 +51,6 @@ function init() {
     RC.lastTime = new Date();
     RC.update();
 }
-
 
 RC.update = function() {
     var thisTime = new Date();
