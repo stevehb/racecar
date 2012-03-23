@@ -2,18 +2,19 @@ var RC = RC || {};
 
 RC.Physics = function() {
     this.objList = new Array();
-    this.hotspots = new Array();
+    this.hotcubeCallbacks = new Array();
 
     this.makePhysical = function(obj) {
         obj.momentum = new THREE.Vector3(0, 0, 0);
         obj.position = new THREE.Vector3(0, 0, 0);
         obj.rotation = new THREE.Vector3(0, 0, 0);
         obj.accumForce = new THREE.Vector3(0, 0, 0);  
-        obj.friction = 0.0;      
+        obj.friction = 0.0;
+        obj.moveable = true;
     };
 
     this.addObject = function(obj) {
-        RC.log("adding object to physics");
+        //RC.log("adding object to physics");
         this.objList.push(obj);
     };
 
@@ -52,38 +53,56 @@ RC.Physics = function() {
         obj.momentum.z += -Math.cos(obj.rotation.y) * (magnitude * obj.friction);
     };
 
-    this.addHotspot2d = function(rect, callback) {
-        this.hotspots.push({ 
-            "rect": rect, 
-            "callback": callback 
-        });
+    this.resetRotation = function(obj, rotation) {
+        // reset rotation 
+        obj.rotation.y = rotation.y;
+
+        // reset momentum
+        var magnitude = obj.momentum.length();
+        obj.momentum.multiplyScalar(0.0);
+        obj.momentum.x = -Math.sin(obj.rotation.y) * magnitude;
+        obj.momentum.z = -Math.cos(obj.rotation.y) * magnitude;
+
+        // and accumForce
+        magnitude = obj.accumForce.length();
+        obj.accumForce.multiplyScalar(0.0);
+        obj.accumForce.x = -Math.sin(obj.rotation.y) * magnitude;
+        obj.accumForce.z = -Math.cos(obj.rotation.y) * magnitude;
     };
 
+    this.addHotcubeCallback = function(cube, obj, func) {
+        RC.log("adding callback for cube " + cube.name);
+        this.hotcubeCallbacks.push({
+            "cube" : cube,
+            "obj" : obj,
+            "func" : func
+        });
+    }
+
     this.update = function(elapsed) {
-        var objRectPos = new THREE.Rectangle();
         $.each(this.objList, function(idx, obj) {
             // turn accumulated forces into momentum, 
             // then turn momentum into movement
-            obj.momentum.x += obj.accumForce.x * elapsed;
-            obj.momentum.z += obj.accumForce.z * elapsed;
-            obj.position.x += obj.momentum.x * elapsed;
-            obj.position.z += obj.momentum.z * elapsed;
-            obj.accumForce.set(0, 0, 0);
+            if(obj.moveable) {
+                obj.momentum.x += obj.accumForce.x * elapsed;
+                obj.momentum.z += obj.accumForce.z * elapsed;
+                obj.position.x += obj.momentum.x * elapsed;
+                obj.position.z += obj.momentum.z * elapsed;
+                obj.accumForce.set(0, 0, 0);
+            }
+        });
 
-            // trigger hotspots
-            $.each(RC.physics.hotspots, function(idx, spot) {
-                objRectPos.empty();
-                objRectPos.addPoint(obj.position.x, obj.position.z);
-                if(spot.rect.intersects(objRectPos)) {
-                    RC.log("got a hit!");
-                    spot.callback(spot.rect, obj);
-                } else {
-                    //RC.log("no hit: spot=[" + spot.rect.getLeft() + "," + spot.rect.getTop() + "," + 
-                    //        spot.rect.getRight() + "," + spot.rect.getBottom() + "] " +
-                    //        "obj=" + objRectPos.getLeft() + "," + objRectPos.getTop() + "," + 
-                    //        objRectPos.getRight() + "," + objRectPos.getBottom() + "]");
-                }
-            });
+        // check hotcubes callbacks
+        $.each(this.hotcubeCallbacks, function(idx, callback) {
+            var cube = callback.cube;
+            var obj = callback.obj;
+            var pos = obj.position;
+
+            if(pos.x > cube.min.x && pos.x < cube.max.x &&
+                pos.y > cube.min.y && pos.y < cube.max.y &&
+                pos.z > cube.min.z && pos.z < cube.max.z) {
+                callback.func(obj, cube);
+            }
         });
     };
 };

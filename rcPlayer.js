@@ -20,12 +20,34 @@ RC.Player = function() {
     this.TURN_SPEED = Math.PI / 2;
     this.accelState = RC.RacerAccelStateEnum.DRIFT;
     this.turnState = RC.RacerTurnStateEnum.NOTURN;
-    RC.log("making physical with RC.physics=" + RC.physics);
     RC.physics.makePhysical(this);
     RC.physics.addObject(this);
     this.rotation.y = Math.PI;
-    this.position.set(0.0, 5.0, RC.END_ZONE_LENGTH);
+    this.position.set(0.0, 1.5, RC.END_ZONE_LENGTH);
     this.friction = 0.10;
+
+    this.lastEndZone = RC.TrackEndZoneEnum.NEAR;
+    this.lapCount = 0;
+
+    this.inEndZone = function(obj, cube) {
+        RC.log("player got end zone trigger (now lap " + obj.lapCount + ")");
+        RC.physics.resetRotation(obj, cube.resetVector);
+        if(cube.name === RC.TrackEndZoneEnum.NEAR.name) {
+            obj.position.z = RC.END_ZONE_LENGTH + 1;
+        } else if(cube.name === RC.TrackEndZoneEnum.FAR.name) {
+            obj.position.z = (RC.TRACK_LENGTH + RC.END_ZONE_LENGTH) - 1;
+        }
+        if(obj.lastEndZone !== cube) {
+            obj.lastEndZone = cube;
+            obj.lapCount++;
+            if(obj.lapCount >= RC.NLAPS) {
+                RC.log("player wins!");
+                // should probably push new EndState("win") here
+            }
+        }
+    };
+    RC.physics.addHotcubeCallback(RC.TrackEndZoneEnum.NEAR, this, this.inEndZone);
+    RC.physics.addHotcubeCallback(RC.TrackEndZoneEnum.FAR, this, this.inEndZone);
 
     this.update = function(elapsed) {
         // get acceleration and turning states from keyboard        
@@ -75,10 +97,5 @@ RC.Player = function() {
             RC.physics.dampenMomentum(this, this.DRAG_MULTIPLIER);
             break;
         }
-
-        // check for end zone flip
-        //if(RC.track.inEndZone(this.position)) {
-        //    this.rotation.y += Math.PI;
-        //}
     };
 };

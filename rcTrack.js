@@ -4,12 +4,29 @@ RC.Track = function() {
     // create track mesh and add to scene
     this.totalLength = RC.TRACK_LENGTH + (RC.END_ZONE_LENGTH * 2);
     this.geom = new THREE.PlaneGeometry(RC.TRACK_WIDTH, this.totalLength, 10, 10);
-    RC.log("created track with w=" + RC.TRACK_WIDTH + ", l=" + this.totalLength);
+    RC.log("created track geometry: w=" + RC.TRACK_WIDTH + ", l=" + this.totalLength);
     this.material = new THREE.MeshLambertMaterial({ color: "0xffffff"});
     this.mesh = new THREE.Mesh(this.geom, this.material);
     this.mesh.rotation.x = (-Math.PI / 2);
     this.mesh.position.z = this.totalLength / 2;
     RC.scene.add(this.mesh);
+
+    // create 'hotcubes'
+    var halfWidth = RC.TRACK_WIDTH / 2;
+    RC.TrackEndZoneEnum = {
+        NEAR : { 
+            min : new THREE.Vector3(-halfWidth, 0, 0),
+            max : new THREE.Vector3(halfWidth, 20, RC.END_ZONE_LENGTH),
+            name : "nearEndZone",
+            resetVector : new THREE.Vector3(0, Math.PI, 0)
+        },
+        FAR : { 
+            min : new THREE.Vector3(-halfWidth, 0, this.totalLength - RC.END_ZONE_LENGTH),
+            max : new THREE.Vector3(halfWidth, 20, this.totalLength),
+            name : "farEndZone",
+            resetVector : new THREE.Vector3(0, 0, 0)
+        }
+    };
 
     // create wireframe blocks and add to scene
     var nBlocks = 100;
@@ -24,7 +41,11 @@ RC.Track = function() {
         rightMesh = new THREE.Mesh(rightGeom, tmpMat);
         rightMesh.position.set(RC.TRACK_WIDTH/2 + 10, 10, zOffset);
 
-        // TODO: add to physics for collisions
+        leftMesh.moveable = false;
+        RC.physics.addObject(leftMesh);
+        rightMesh.moveable = false;;
+        RC.physics.addObject(rightMesh);
+
         RC.scene.add(leftMesh);
         RC.scene.add(rightMesh);
     }
@@ -40,16 +61,4 @@ RC.Track = function() {
         light.position.set(0, 30, zCoord);
         RC.scene.add(light);
     }
-
-    // add endzones hotspots to physics
-    var ezNear = new THREE.Rectangle(), ezFar = new THREE.Rectangle();
-    ezNear.set(0, RC.END_ZONE_LENGTH, RC.TRACK_WIDTH, 0);
-    ezFar.set(0, this.totalLength, RC.TRACK_WIDTH, this.totalLength - RC.END_ZONE_LENGTH);
-    RC.physics.addHotspot2d(ezNear, this.triggerEndZone);
-    RC.physics.addHotspot2d(ezFar, this.triggerEndZone);
-
-
-    this.triggerEndZone = function(rect, obj) {
-        RC.log("obj " + obj + " hit the hotspot [" + rect.getLeft() + "," + rect.getTop() + "," + rect.getRight() + "," + rect.getBottom() + "]");
-    };
 };

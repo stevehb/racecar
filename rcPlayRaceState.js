@@ -8,16 +8,17 @@ RC.PlayRaceState = function() {
     timer.text("0.00");
     
     RC.track = RC.track || new RC.Track();
-
-    RC.camera.position.set(0, 10, 0);
-    RC.camera.rotation.y = Math.PI;
-
-    RC.player = new RC.Player();
-    RC.racers = new Array(RC.NRACERS);
-    RC.racers[0] = RC.player;
-    for(i = 1; i < RC.NRACERS; i++) {
-        RC.racers[i] = new RC.Racer(i);
+    RC.player = RC.player || new RC.Player();
+    if(RC.racers.length !== RC.NRACERS) {
+        RC.racers.length = RC.NRACERS;
+        RC.racers[0] = RC.player;
+        for(i = 1; i < RC.NRACERS; i++) {
+            RC.racers[i] = new RC.Racer(i);
+        }
     }
+
+    RC.camera.position.copy(RC.player.position);
+    RC.camera.rotation.copy(RC.player.rotation);
 
     this.update = function(elapsed) {
         accumTime += elapsed;
@@ -29,8 +30,17 @@ RC.PlayRaceState = function() {
         }
         RC.physics.update(elapsed);
 
-        RC.camera.position.x = RC.player.position.x;
-        RC.camera.position.z = RC.player.position.z;
-        RC.camera.rotation.y = RC.player.rotation.y;
+        RC.camera.position.copy(RC.player.position);
+        RC.camera.rotation.copy(RC.player.rotation);
+
+        RC.debug(1, " pos: [" + RC.player.position.x.toFixed(2) + "," +
+            RC.player.position.y.toFixed(2) + "," + 
+            RC.player.position.z.toFixed(2) + "]");
+        RC.debug(2, " rotation=[" + RC.player.rotation.x.toFixed(2) + "," +
+            RC.player.rotation.y.toFixed(2) + ", " + 
+            RC.player.rotation.z.toFixed(2) + "]");
+        RC.debug(3, " momentum=[" + RC.player.momentum.x.toFixed(2) + "," +
+            RC.player.momentum.y.toFixed(2) + ", " + 
+            RC.player.momentum.z.toFixed(2) + "]");
     }
 };
