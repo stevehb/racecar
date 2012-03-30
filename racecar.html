@@ -1,0 +1,76 @@
+<html>
+    <head>
+        <script src="lib/jquery-1.7.1.js"></script>
+        <script src="lib/Three.js"></script>
+        <script src="lib/Stats.js"></script>
+        <script src="lib/Tween.js"></script>
+        <script src="lib/THREEx.KeyboardState.js"></script>
+        <script src="lib/THREEx.WindowResize.js"></script>
+        <script src="racecar.js"></script>
+        <script src="rcPhysics.js"></script>
+        <script src="rcTitleState.js"></script>
+        <script src="rcPlayCountdownState.js"></script>
+        <script src="rcPlayRaceState.js"></script>
+        <script src="rcEndState.js"></script>
+        <script src="rcTrack.js"></script>
+        <script src="rcPlayer.js"></script>
+        <script src="rcRacer.js"></script>
+        <style type="text/css">
+        body {
+            margin: 0px;
+            padding: 0px;
+        }
+        #game-container {
+            position: relative;
+        }
+        #canvas-container {
+            display: inline-block;
+            position: absolute;
+        }
+        #game-timer {
+            color: red;
+            display: none;
+            font-size: 48;
+            margin: 4px;
+            position: absolute;
+        }
+        #game-container img {
+            position: absolute;
+            display: none;
+        }
+        #stats {
+            position: absolute;
+            right: 0px;
+            top: 0px;
+        }
+        .debug {
+            position: relative;
+            display: inline;
+            font-family: Helvetica,sans-serif;
+            font-size: 12px;
+            color: yellow;
+        }
+        .cover {
+            position: absolute;
+            margin: 0px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+        </style>
+    </head>
+    <body onload="init()">
+        <div id="game-container">
+            <div id="canvas-container"></div>
+            <div id="stats"></div>
+            <span id="game-timer"></span>
+            <img id="img-logo" src="img/logo.png" />
+            <img id="img-start" src="img/start.png" />
+            <div id="ending"></div>
+        </div>
+        <div class="cover" id="cover"></div>
+        <div class="debug" id="debug"></div>
+    </body>
+</html>
