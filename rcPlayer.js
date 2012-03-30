@@ -1,36 +1,56 @@
 var RC = RC || {};
 
 RC.Player = function() {
-    RC.RacerAccelStateEnum = {
-        ACCEL : { value : 0, name : "accel" },
-        REVERSE : { value : 1, name : "reverse" },
-        STOP : { value : 2, name : "stop"},
-        DRIFT : { value : 3, name : "drift" }
-    };
-    RC.RacerTurnStateEnum = {
-        LEFT : { value : 1, name : "left" },
-        NOTURN : { value : 0, name : "noturn" },
-        RIGHT : { value : -1, name : "right" }
-    };
-
+    var geometry, material;
+    var cover;
+    var turnState, accelState;
     this.MAX_SPEED = 200;
     this.ACCEL_FORCE = 150;
     this.DRAG_MULTIPLIER = 0.98;
     this.STOP_MULTIPLIER = 0.90;
     this.TURN_SPEED = Math.PI / 2;
-    this.accelState = RC.RacerAccelStateEnum.DRIFT;
-    this.turnState = RC.RacerTurnStateEnum.NOTURN;
+
+    RC.RacerAccelStateEnum = RC.RacerAccelStateEnum || {
+        ACCEL : { value : 0, name : "accel" },
+        REVERSE : { value : 1, name : "reverse" },
+        STOP : { value : 2, name : "stop"},
+        DRIFT : { value : 3, name : "drift" }
+    };
+    RC.RacerTurnStateEnum = RC.RacerTurnStateEnum || {
+        LEFT : { value : 1, name : "left" },
+        NOTURN : { value : 0, name : "noturn" },
+        RIGHT : { value : -1, name : "right" }
+    };
+
+    accelState = RC.RacerAccelStateEnum.DRIFT;
+    turnState = RC.RacerTurnStateEnum.NOTURN;
     RC.physics.makePhysical(this);
-    RC.physics.addObject(this);
     this.rotation.y = Math.PI;
     this.position.set(0.0, 1.5, RC.END_ZONE_LENGTH);
     this.friction = 0.10;
-
+    this.boundingRadius = 2.0;
     this.lastEndZone = RC.TrackEndZoneEnum.NEAR;
     this.lapCount = 0;
+    RC.physics.addObject(this);
 
+    geom = new THREE.SphereGeometry(2, 4, 4);
+    material = new THREE.MeshBasicMaterial({ color : 0x4444bb });
+    this.mesh = new THREE.Mesh(geom, material);
+    this.mesh.position.copy(this.position);
+    RC.scene.add(this.mesh);
+
+    /* Set up cover over canvas for flash at end zones.
+     */
+    cover = $("#cover");
+
+    /* Set up end zone respnse. We register this function with Physics for
+     * a callback when Player is in the end zone.
+     */
     this.inEndZone = function(obj, cube) {
         RC.log("player got end zone trigger (now lap " + obj.lapCount + ")");
+        cover.show();
+        cover.fadeOut("slow");
+
         RC.physics.resetRotation(obj, cube.resetVector);
         if(cube.name === RC.TrackEndZoneEnum.NEAR.name) {
             obj.position.z = RC.END_ZONE_LENGTH + 1;
@@ -42,7 +62,7 @@ RC.Player = function() {
             obj.lapCount++;
             if(obj.lapCount >= RC.NLAPS) {
                 RC.log("player wins!");
-                // should probably push new EndState("win") here
+                RC.stateStack.push(new RC.EndState("win"));
             }
         }
     };
@@ -52,24 +72,24 @@ RC.Player = function() {
     this.update = function(elapsed) {
         // get acceleration and turning states from keyboard        
         if(RC.keyboard.pressed("up")) {
-            this.accelState = RC.RacerAccelStateEnum.ACCEL;
+            accelState = RC.RacerAccelStateEnum.ACCEL;
         } else if(RC.keyboard.pressed("down")) {
-            this.accelState = RC.RacerAccelStateEnum.REVERSE;
+            accelState = RC.RacerAccelStateEnum.REVERSE;
         } else if(RC.keyboard.pressed("space")) {
-            this.accelState = RC.RacerAccelStateEnum.STOP;
+            accelState = RC.RacerAccelStateEnum.STOP;
         } else {
-            this.accelState = RC.RacerAccelStateEnum.DRIFT;
+            accelState = RC.RacerAccelStateEnum.DRIFT;
         }
         if(RC.keyboard.pressed("left")) {
-            this.turnState = RC.RacerTurnStateEnum.LEFT;
+            turnState = RC.RacerTurnStateEnum.LEFT;
         } else if(RC.keyboard.pressed("right")) {
-            this.turnState = RC.RacerTurnStateEnum.RIGHT;
+            turnState = RC.RacerTurnStateEnum.RIGHT;
         } else {
-            this.turnState = RC.RacerTurnStateEnum.NOTURN;
+            turnState = RC.RacerTurnStateEnum.NOTURN;
         }
 
         // apply rotations
-        switch(this.turnState) {
+        switch(turnState) {
         case RC.RacerTurnStateEnum.LEFT:
             RC.physics.rotate(this, this.TURN_SPEED * elapsed);
             break;
@@ -81,7 +101,7 @@ RC.Player = function() {
         }
         
         // apply accel/decel/drift
-        switch(this.accelState) {
+        switch(accelState) {
         case RC.RacerAccelStateEnum.ACCEL:
             RC.physics.addForce(this, this.ACCEL_FORCE);
             RC.physics.clampMomentum(this, this.MAX_SPEED);
@@ -97,5 +117,8 @@ RC.Player = function() {
             RC.physics.dampenMomentum(this, this.DRAG_MULTIPLIER);
             break;
         }
+
+        this.mesh.position.copy(this.position);
+        this.mesh.rotation.copy(this.rotation);
     };
 };

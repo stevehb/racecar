@@ -1,10 +1,10 @@
 var RC = RC || {};
 
 RC.PlayRaceState = function() {
+    var accumTime = 0, timer;
     var i;
-    var accumTime = 0;
 
-    var timer = $("#game-timer");
+    timer = $("#game-timer");
     timer.text("0.00");
     
     RC.track = RC.track || new RC.Track();
@@ -13,9 +13,18 @@ RC.PlayRaceState = function() {
         RC.racers.length = RC.NRACERS;
         RC.racers[0] = RC.player;
         for(i = 1; i < RC.NRACERS; i++) {
-            RC.racers[i] = new RC.Racer(i);
+            RC.racers[i] = new RC.Racer();
         }
     }
+    $.each(RC.racers, function(idx, racer) {
+        racer.position.x = (idx * RC.RACER_WIDTH) + (RC.RACER_WIDTH / 2);
+        racer.position.x -= (RC.TRACK_WIDTH / 2);
+        racer.mesh.position.x = racer.position.x;
+    });
+
+    $("#cover").css({
+        "background-color": "rgb(255, 255, 255)"
+    });
 
     RC.camera.position.copy(RC.player.position);
     RC.camera.rotation.copy(RC.player.rotation);

@@ -5,16 +5,17 @@ RC.Physics = function() {
     this.hotcubeCallbacks = new Array();
 
     this.makePhysical = function(obj) {
-        obj.momentum = new THREE.Vector3(0, 0, 0);
-        obj.position = new THREE.Vector3(0, 0, 0);
-        obj.rotation = new THREE.Vector3(0, 0, 0);
-        obj.accumForce = new THREE.Vector3(0, 0, 0);  
-        obj.friction = 0.0;
-        obj.moveable = true;
+        obj.momentum = obj.momentum || new THREE.Vector3(0, 0, 0);
+        obj.position = obj.position || new THREE.Vector3(0, 0, 0);
+        obj.rotation = obj.rotation || new THREE.Vector3(0, 0, 0);
+        obj.accumForce = obj.accumForce || new THREE.Vector3(0, 0, 0);
+        obj.mass = obj.mass || 1.0;
+        obj.friction = obj.friction || 0.1;
+        obj.moveable = obj.moveable || true;
+        obj.boundingRadius = obj.boundingRadius || 1.0;
     };
 
     this.addObject = function(obj) {
-        //RC.log("adding object to physics");
         this.objList.push(obj);
     };
 
@@ -32,8 +33,9 @@ RC.Physics = function() {
     };
 
     this.clampMomentum = function(obj, max) {
-        if(obj.momentum.length() > max) {
-            obj.momentum.multiplyScalar(max / obj.momentum.length());
+        var len = obj.momentum.length();
+        if(len > max) {
+            obj.momentum.multiplyScalar(max / len);
         }
     };
 
@@ -80,6 +82,8 @@ RC.Physics = function() {
     }
 
     this.update = function(elapsed) {
+        var collidingPairs;
+
         $.each(this.objList, function(idx, obj) {
             // turn accumulated forces into momentum, 
             // then turn momentum into movement
@@ -97,12 +101,17 @@ RC.Physics = function() {
             var cube = callback.cube;
             var obj = callback.obj;
             var pos = obj.position;
-
             if(pos.x > cube.min.x && pos.x < cube.max.x &&
                 pos.y > cube.min.y && pos.y < cube.max.y &&
                 pos.z > cube.min.z && pos.z < cube.max.z) {
                 callback.func(obj, cube);
             }
         });
+
+        //$.each(this.objList, function(idx1, obj1) {
+        //    $.each(this.objList, function(idx2, obj2) {
+        //
+        //    });
+        //});
     };
 };

@@ -1,10 +1,11 @@
 <html>
     <head>
-        <script src="jquery-1.7.1.js"></script>
-        <script src="Three.js"></script>
-        <script src="Stats.js"></script>
-        <script src="Tween.js"></script>
-        <script src="THREEx.KeyboardState.js"></script>
+        <script src="lib/jquery-1.7.1.js"></script>
+        <script src="lib/Three.js"></script>
+        <script src="lib/Stats.js"></script>
+        <script src="lib/Tween.js"></script>
+        <script src="lib/THREEx.KeyboardState.js"></script>
+        <script src="lib/THREEx.WindowResize.js"></script>
         <script src="racecar.js"></script>
         <script src="rcPhysics.js"></script>
         <script src="rcTitleState.js"></script>
@@ -14,27 +15,20 @@
         <script src="rcTrack.js"></script>
         <script src="rcPlayer.js"></script>
         <script src="rcRacer.js"></script>
-
         <style type="text/css">
         body {
             margin: 0px;
             padding: 0px;
         }
-        canvas {
-            border: 1px solid #009;
-        }
         #game-container {
             position: relative;
         }
         #canvas-container {
-            border: 2px solid red;
-            margin: 1px;
-            padding: 1px;
             display: inline-block;
             position: absolute;
         }
         #game-timer {
-            color: #ff0000;
+            color: red;
             display: none;
             font-size: 48;
             margin: 4px;
@@ -54,17 +48,29 @@
             display: inline;
             font-family: Helvetica,sans-serif;
             font-size: 12px;
+            color: yellow;
+        }
+        .cover {
+            position: absolute;
+            margin: 0px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
         }
         </style>
     </head>
     <body onload="init()">
         <div id="game-container">
+            <div id="canvas-container"></div>
             <div id="stats"></div>
-            <span id="canvas-container"></span>
             <span id="game-timer"></span>
             <img id="img-logo" src="img/logo.png" />
             <img id="img-start" src="img/start.png" />
+            <div id="ending"></div>
         </div>
+        <div class="cover" id="cover"></div>
         <div class="debug" id="debug"></div>
     </body>
 </html>

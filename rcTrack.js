@@ -1,18 +1,43 @@
 var RC = RC || {};
 
 RC.Track = function() {
-    // create track mesh and add to scene
-    this.totalLength = RC.TRACK_LENGTH + (RC.END_ZONE_LENGTH * 2);
-    this.geom = new THREE.PlaneGeometry(RC.TRACK_WIDTH, this.totalLength, 10, 10);
-    RC.log("created track geometry: w=" + RC.TRACK_WIDTH + ", l=" + this.totalLength);
-    this.material = new THREE.MeshLambertMaterial({ color: "0xffffff"});
-    this.mesh = new THREE.Mesh(this.geom, this.material);
-    this.mesh.rotation.x = (-Math.PI / 2);
-    this.mesh.position.z = this.totalLength / 2;
-    RC.scene.add(this.mesh);
+    var NTRACK_SEGMENTS = 5;
+    var geom, material, segLength, worldRot;
+    var totalLength, halfWidth;
+    var i, z;
 
-    // create 'hotcubes'
-    var halfWidth = RC.TRACK_WIDTH / 2;
+    /* Create main track, minus the end zones. Track is made up of 
+     * NTRACK_SEGMENTS segments, starting just past the near end 
+     * zone and ending just before the far end zone.
+     */
+    segLength = RC.TRACK_LENGTH / NTRACK_SEGMENTS;
+    material = new THREE.MeshBasicMaterial({ map : RC.textures.roadTexture });
+    geom = new THREE.PlaneGeometry(RC.TRACK_WIDTH, segLength, 10, 10);
+    worldRot = (-Math.PI / 2);
+    for(i = 0; i < NTRACK_SEGMENTS; i++) {
+        this.mesh = new THREE.Mesh(geom, material);
+        this.mesh.rotation.x = worldRot;
+        z = RC.END_ZONE_LENGTH + (i * segLength) + (segLength / 2);
+        this.mesh.position.z = z; // geom. this.totalLength / 2;
+        RC.scene.add(this.mesh);
+    }
+
+    /* Add end zones as walls
+     */
+    material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    material.opacity = 0.1;
+    geom = new THREE.PlaneGeometry(RC.TRACK_WIDTH, 20, 10, 10);
+    this.nearEndPlane = new THREE.Mesh(geom, material);
+    this.nearEndPlane.position.set(0, 10, RC.END_ZONE_LENGTH);
+    RC.scene.add(this.nearEndPlane);
+    this.farEndPlane = new THREE.Mesh(geom, material);
+    this.farEndPlane.position.set(0, 10, RC.END_ZONE_LENGTH + RC.TRACK_LENGTH);
+    this.farEndPlane.flipSided = true;
+    RC.scene.add(this.farEndPlane);
+
+    // create end zone 'hotcubes'
+    halfWidth = RC.TRACK_WIDTH / 2;
+    totalLength = RC.TRACK_LENGTH + (2 * RC.END_ZONE_LENGTH);
     RC.TrackEndZoneEnum = {
         NEAR : { 
             min : new THREE.Vector3(-halfWidth, 0, 0),
@@ -21,8 +46,8 @@ RC.Track = function() {
             resetVector : new THREE.Vector3(0, Math.PI, 0)
         },
         FAR : { 
-            min : new THREE.Vector3(-halfWidth, 0, this.totalLength - RC.END_ZONE_LENGTH),
-            max : new THREE.Vector3(halfWidth, 20, this.totalLength),
+            min : new THREE.Vector3(-halfWidth, 0, totalLength - RC.END_ZONE_LENGTH),
+            max : new THREE.Vector3(halfWidth, 20, totalLength),
             name : "farEndZone",
             resetVector : new THREE.Vector3(0, 0, 0)
         }
@@ -30,7 +55,7 @@ RC.Track = function() {
 
     // create wireframe blocks and add to scene
     var nBlocks = 100;
-    var i, zOffset, leftGeom, righGeom, leftMesh, rightMesh;
+    var zOffset, leftGeom, righGeom, leftMesh, rightMesh;
     var tmpMat = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } );
     for(i = 0; i < nBlocks; i++) {
         zOffset = RC.END_ZONE_LENGTH + ((i/nBlocks) * RC.TRACK_LENGTH);
@@ -61,4 +86,8 @@ RC.Track = function() {
         light.position.set(0, 30, zCoord);
         RC.scene.add(light);
     }
+
+    this.update = function(elapsed) {
+
+    };
 };
